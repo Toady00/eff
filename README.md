@@ -1,6 +1,8 @@
 # Eff
 
-TODO: Write a gem description
+[![Gem Version](https://badge.fury.io/rb/eff.png)](http://badge.fury.io/rb/eff) [![Build Status](https://travis-ci.org/Toady00/eff.png)](https://travis-ci.org/Toady00/eff) [![Code Climate](https://codeclimate.com/github/Toady00/eff.png)](https://codeclimate.com/github/Toady00/eff) [![Coverage Status](https://coveralls.io/repos/Toady00/eff/badge.png)](https://coveralls.io/r/Toady00/eff) [![Dependency Status](https://gemnasium.com/Toady00/eff.png)](https://gemnasium.com/Toady00/eff)
+
+This gems aims to be a way to help simplify the task of building multiple packages with [FPM](https://github.com/jordansissel/fpm).
 
 ## Installation
 
