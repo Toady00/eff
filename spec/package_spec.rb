@@ -7,7 +7,7 @@ describe Eff::Package do
 
   let(:url_template)   { '<%= "http://example.com/package-#{@major}.#{@minor}.#{@patch}.deb" %>' }
   let(:url)            { 'http://example.com/package-1.2.3.deb' }
-  let(:save_file)      { '~/example.txt' }
+  let(:save_file)      { 'example.txt' }
   let(:full_save_path) { File.expand_path(save_file, Dir.pwd) }
   let(:version)        { '1.2.3'}
   let(:options)        { { url_template: url_template, save_file: save_file, version: version } }
@@ -21,7 +21,6 @@ describe Eff::Package do
   before { Faraday.stub(:get).and_return(fake_success) }
 
   it { should respond_to :download }
-  it { should respond_to :save }
   it { should respond_to :downloaded? }
   it { should respond_to :url }
   it { should respond_to :save_file }
@@ -29,21 +28,14 @@ describe Eff::Package do
 
   describe 'downloader wrapper method' do
     describe '#download' do
-      it 'calls #get' do
+      it 'calls Eff::Downloader#get' do
         Eff::Downloader.any_instance.should_receive(:get)
         package.download
       end
     end
 
-    describe '#save' do
-      it 'calls #save' do
-        Eff::Downloader.any_instance.should_receive(:save)
-        package.save
-      end
-    end
-
     describe '#downloaded?' do
-      it 'calls success?' do
+      it 'calls Eff::Downloader#success?' do
         Eff::Downloader.any_instance.should_receive(:success?)
         package.downloaded?
       end
@@ -53,6 +45,15 @@ describe Eff::Package do
   describe '#url' do
     it 'returns the correct url' do
       package.url.should eq(url)
+    end
+  end
+
+  describe '#save_file=' do
+    it 'forgets about previous downloads' do
+      package.download
+      package.should be_downloaded
+      package.version = "4.5.6"
+      package.should_not be_downloaded
     end
   end
 end

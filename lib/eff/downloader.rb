@@ -11,18 +11,11 @@ module Eff
 
     def get
       @response = Faraday.get(uri)
+      save
     end
 
-    def save
-      File.open(file, 'wb') do |f|
-        f.write(response_body)
-      end if success?
-    end
-
-    # TODO: should this really trigger it to download?
     def success?
-      get unless response
-      @response.success?
+      response ? response.success? : false
     end
 
     def file=(value)
@@ -36,6 +29,13 @@ module Eff
     end
 
   private
+    def save
+      File.open(file, 'wb') do |f|
+        f.write(response_body)
+      end if success?
+      success?
+    end
+
     def response_body
       response.body
     end

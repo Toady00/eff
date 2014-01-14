@@ -17,11 +17,6 @@ module Eff
       downloader.get
     end
 
-    def save
-      downloader.save
-    end
-
-    # TODO: should this really trigger it to download?
     def downloaded?
       downloader.success?
     end
@@ -32,10 +27,12 @@ module Eff
     end
 
     def save_file=(value)
+      clear_download!
       @save_file = File.expand_path(value, Dir.pwd)
     end
 
     def version=(value)
+      clear_download!
       @version = SemanticVersion.new(value)
     end
 
@@ -50,6 +47,10 @@ module Eff
 
     def download_response
       downloader.response
+    end
+
+    def clear_download!
+      new_downloader if downloader
     end
   end
 end
