@@ -31,4 +31,36 @@ describe Eff::Package::SemanticVersion do
       end
     end
   end
+
+  describe '#<=>' do
+    before do
+      @versions = []
+      %w(0.0.1 0.0.5 0.1.0 1.0.0 1.0.1 1.2.0 2.0.0).each do |version|
+        @versions << Eff::Package::SemanticVersion.new(version)
+      end
+    end
+
+    it 'compares versions correctly' do
+      @versions.each_with_index do |version, index|
+        @versions.each_with_index do |other, other_index|
+          if index > other_index
+            (version > other).should be_true
+            (version < other).should be_false
+            (version == other).should be_false
+            (version != other).should be_true
+          elsif index < other_index
+            (version > other).should be_false
+            (version < other).should be_true
+            (version == other).should be_false
+            (version != other).should be_true
+          else
+            (version > other).should be_false
+            (version < other).should be_false
+            (version == other).should be_true
+            (version != other).should be_false
+          end
+        end
+      end
+    end
+  end
 end

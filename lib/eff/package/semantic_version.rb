@@ -1,7 +1,10 @@
 module Eff
   class Package
     class SemanticVersion
-      PARTS = %i(major minor patch release identity)
+      include Comparable
+
+      BASE_PARTS = %i(major minor patch)
+      PARTS = BASE_PARTS + %i(release identity)
 
       PARTS.each do |part|
         attr_accessor part
@@ -16,6 +19,15 @@ module Eff
         Hash[
           PARTS.map { |part| [part, send(part)] }
         ]
+      end
+
+      def <=>(other)
+        result = 0
+        BASE_PARTS.each do |part|
+          result = self.public_send(part).to_i <=> other.public_send(part).to_i
+          break unless result == 0
+        end
+        result
       end
 
     private
