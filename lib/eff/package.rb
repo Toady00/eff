@@ -27,13 +27,13 @@ module Eff
     end
 
     def save_file=(value)
-      clear_download!
       @save_file = File.expand_path(value, Dir.pwd)
+      clear_download!
     end
 
     def version=(value)
-      clear_download!
       @version = SemanticVersion.new(value)
+      clear_download!
     end
 
   private
