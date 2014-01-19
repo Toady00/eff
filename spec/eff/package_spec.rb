@@ -6,11 +6,9 @@ describe Eff::Package do
   include FakeFS::SpecHelpers
 
   let(:url_template)   { '<%= "http://example.com/package-#{@major}.#{@minor}.#{@patch}.deb" %>' }
-  let(:url)            { 'http://example.com/package-1.2.3.deb' }
-  let(:save_file)      { 'example.txt' }
-  let(:full_save_path) { File.expand_path(save_file, Dir.pwd) }
+  let(:file_template)  { '<%= "package-#{@major}.#{@minor}.#{@patch}.deb" %>' }
   let(:version)        { '1.2.3'}
-  let(:options)        { { url_template: url_template, save_file: save_file, version: version } }
+  let(:options)        { { url_template: url_template, file_template: file_template, version: version } }
   let(:package)        { Eff::Package.new options }
 
   let(:fake_success) { OpenStruct.new(body: "I'm a fake response!", success?: true) }
@@ -20,14 +18,17 @@ describe Eff::Package do
 
   before { Faraday.stub(:get).and_return(fake_success) }
 
-  it { should respond_to :name }
-  it { should respond_to :download }
-  it { should respond_to :downloaded? }
-  it { should respond_to :url }
-  it { should respond_to :save_file }
-  it { should respond_to :version }
-  it { should respond_to :checksum }
+  it { should respond_to :name          }
+  it { should respond_to :download      }
+  it { should respond_to :downloaded?   }
+  it { should respond_to :url           }
+  it { should respond_to :file_name     }
+  it { should respond_to :save_file     }
+  it { should respond_to :version       }
+  it { should respond_to :checksum      }
   it { should respond_to :hash_function }
+  it { should respond_to :verified?     }
+  it { should respond_to :verifiable?   }
 
   describe 'downloader wrapper method' do
     describe '#download' do
@@ -47,50 +48,38 @@ describe Eff::Package do
   end
 
   describe '#url' do
+    let(:url) { 'http://example.com/package-1.2.3.deb' }
+
     it 'returns the correct url' do
       package.url.should eq(url)
     end
   end
 
-  describe 'setter' do
+  describe '#version=' do
     before do
       package.download
       package.should be_downloaded
     end
 
-    describe '#save_file=' do
-      let(:new_save_file) { File.expand_path('new_save_file.txt', Dir.pwd) }
+    let(:new_version)    { '4.5.6' }
+    let(:package_name)   { "package-#{new_version}.deb"}
+    let(:url)            { "http://example.com/#{package_name}" }
+    let(:full_save_path) { File.expand_path(package_name, Dir.pwd) }
 
-      it 'forgets about previous downloads' do
-        package.save_file = new_save_file
-        package.should_not be_downloaded
-      end
-
-      it 'creates a new downloader with the correct save file' do
-        Eff::Downloader.should_receive(:new).with(url, new_save_file)
-        package.save_file = new_save_file
-      end
+    it 'forgets about previous downloads' do
+      package.version = new_version
+      package.should_not be_downloaded
     end
 
-    describe '#version=' do
-      let(:new_version) { '4.5.6' }
-      let(:url)         { 'http://example.com/package-4.5.6.deb' }
+    it 'updates the url' do
+      old_url = package.url
+      package.version = new_version
+      package.url.should_not eq old_url
+    end
 
-      it 'forgets about previous downloads' do
-        package.version = new_version
-        package.should_not be_downloaded
-      end
-
-      it 'updates the url' do
-        old_url = package.url
-        package.version = new_version
-        package.url.should_not eq old_url
-      end
-
-      it 'creates a new downloader with the correct url' do
-        Eff::Downloader.should_receive(:new).with(url, full_save_path)
-        package.version = new_version
-      end
+    it 'creates a new downloader with the correct url' do
+      Eff::Downloader.should_receive(:new).with(url, full_save_path)
+      package.version = new_version
     end
   end
 

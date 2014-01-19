@@ -1,7 +1,6 @@
 require 'eff/downloader'
 require 'eff/template'
 require 'eff/package/semantic_version'
-require 'eff/package/store'
 require 'eff/verifier'
 
 module Eff
@@ -11,11 +10,12 @@ module Eff
     def initialize(options = {})
       @name          = options[:name]
       @url_template  = options[:url_template]
-      self.save_file = options[:save_file]
+      @file_template = options[:file_template]
       self.version   = options[:version]
       @checksum      = options[:checksum]
       @hash_function = options[:hash_function]
-      new_downloader
+
+      after_init_hook
     end
 
     def download
@@ -23,22 +23,28 @@ module Eff
     end
 
     def downloaded?
-      downloader.success?
+      downloader_success?
     end
 
     def url
-      template = Eff::Template.new(@url_template, version)
-      template.result
+      template_for(:url).result
     end
 
-    def save_file=(value)
-      @save_file = File.expand_path(value, Dir.pwd)
-      clear_download!
+    def file_name
+      template_for(:file).result
+    end
+
+    def save_file
+      File.expand_path(file_name, Dir.pwd)
     end
 
     def version=(value)
       @version = SemanticVersion.new(value)
       clear_download!
+    end
+
+    def ==(other)
+      (name == other.name) && (version == other.version)
     end
 
     def verified?
@@ -50,6 +56,10 @@ module Eff
     end
 
   private
+    def after_init_hook
+      new_downloader
+    end
+
     def downloader
       @downloader
     end
@@ -58,12 +68,17 @@ module Eff
       @downloader = Eff::Downloader.new(url, save_file)
     end
 
-    def download_response
-      downloader.response
+    def downloader_success?
+      downloader.success?
     end
 
     def clear_download!
       new_downloader if downloader
+    end
+
+    def template_for(sym)
+      template = instance_variable_get("@#{sym}_template".to_sym)
+      Eff::Template.new(template, version)
     end
   end
 end
