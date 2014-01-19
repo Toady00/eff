@@ -27,7 +27,7 @@ describe Eff::Package do
   it { should respond_to :save_file }
   it { should respond_to :version }
   it { should respond_to :checksum }
-  it { should respond_to :digest_algo }
+  it { should respond_to :hash_function }
 
   describe 'downloader wrapper method' do
     describe '#download' do
@@ -39,6 +39,7 @@ describe Eff::Package do
 
     describe '#downloaded?' do
       it 'calls Eff::Downloader#success?' do
+        Eff::Downloader.stub(:previously_downloaded?)
         Eff::Downloader.any_instance.should_receive(:success?)
         package.downloaded?
       end
@@ -89,6 +90,45 @@ describe Eff::Package do
       it 'creates a new downloader with the correct url' do
         Eff::Downloader.should_receive(:new).with(url, full_save_path)
         package.version = new_version
+      end
+    end
+  end
+
+  describe 'verification' do
+    let(:package) { Eff::Package.new @options }
+
+    describe '#verifiable?' do
+      it 'returns false without checksum or hash_function' do
+        @options = options
+        package.should_not be_verifiable
+      end
+
+      it 'returns false without checksum' do
+        @options = options.merge(hash_function: 'sha1')
+        package.should_not be_verifiable
+      end
+
+      it 'returns false without hash_function' do
+        @options = options.merge(checksum: 'some_string')
+        package.should_not be_verifiable
+      end
+
+      it 'returns tru with checksum and hash_function' do
+        @options = options.merge(checksum: 'some_string', hash_function: 'sha1')
+        package.should be_verifiable
+      end
+    end
+
+    describe '#verified?' do
+      it 'returns false if not verifiable' do
+        @options = options
+        package.should_not be_verified
+      end
+
+      it 'calls Verifier.check if verifiable' do
+        @options = options.merge(checksum: 'some_string', hash_function: 'sha1')
+        Eff::Verifier.should_receive(:check).with(package.save_file, package.checksum, package.hash_function)
+        package.verified?
       end
     end
   end

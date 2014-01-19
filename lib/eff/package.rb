@@ -1,15 +1,20 @@
 require 'eff/downloader'
 require 'eff/template'
 require 'eff/package/semantic_version'
+require 'eff/package/store'
+require 'eff/verifier'
 
 module Eff
   class Package
-    attr_accessor :save_file, :version
+    attr_accessor :name, :save_file, :version, :checksum, :hash_function
 
     def initialize(options = {})
+      @name          = options[:name]
       @url_template  = options[:url_template]
       self.save_file = options[:save_file]
       self.version   = options[:version]
+      @checksum      = options[:checksum]
+      @hash_function = options[:hash_function]
       new_downloader
     end
 
@@ -34,6 +39,14 @@ module Eff
     def version=(value)
       @version = SemanticVersion.new(value)
       clear_download!
+    end
+
+    def verified?
+      verifiable? ? Verifier.check(save_file, checksum, hash_function) : false
+    end
+
+    def verifiable?
+      checksum && hash_function
     end
 
   private
