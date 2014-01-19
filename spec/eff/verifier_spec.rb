@@ -16,8 +16,12 @@ describe Eff::Verifier do
 
     it 'returns false if the hashes do not match' do
       hashes.each do |hash_function, value|
-        Eff::Verifier.check(file, "this doesn't match", hash_function).should_not be_true
+        Eff::Verifier.check(file, "this doesn't match", hash_function).should be_false
       end
+    end
+
+    it 'returns false if the file does not exist' do
+      Eff::Verifier.check('non-existant-file.txt', sha1, :sha1).should be_false
     end
   end
 end
